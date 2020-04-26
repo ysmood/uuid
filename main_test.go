@@ -25,19 +25,27 @@ func Example_basic() {
 }
 
 func TestBytes(t *testing.T) {
-	id := uuid.New()
-
-	expect := `uuid-\d\d\d\d_\d\d_\d\dT\d\d:\d\d:\d\d-[0-9a-f]{4}-[0-9a-f]{6}`
-	assert.Regexp(t, expect, id.String())
+	id := uuid.New().N([]byte("uid")).M([]byte("01"))
 
 	prefix := uuid.Parse(id.Bin()).Time
 
 	assert.Len(t, id.Bin(), 16)
+
+	expect := `uid-\d\d\d\d_\d\d_\d\dT\d\d:\d\d:\d\d-[0-9a-f]{4}-[0-9a-f]{8}`
+	assert.Regexp(t, expect, id.String())
+
 	assert.True(t, time.Since(prefix) < time.Millisecond)
+	assert.Equal(t, id.Bin(), uuid.ParseHex(id.Hex()).Bin())
 
 	assert.Panics(t, func() {
 		id := uuid.New()
 		id.Namespace = make([]byte, 20)
+		id.Bin()
+	})
+
+	assert.Panics(t, func() {
+		id := uuid.New()
+		id.Time, _ = time.Parse("2006", "2006")
 		id.Bin()
 	})
 

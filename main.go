@@ -1,16 +1,23 @@
 package uuid
 
 import (
+	"bytes"
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/binary"
 	"encoding/hex"
+	"fmt"
 	"os"
 	"strings"
 	"time"
 )
 
-var defaultNamespace = []byte("uuid")
+const lenNamespace = 3
+const lenMachine = 2
+const lenTime = 7
+const lenNoise = 4
+
+var defaultNamespace = bytes.Repeat([]byte("_"), 3)
 var defaultHostCache []byte
 var baseTimeCache *time.Time
 
@@ -30,10 +37,10 @@ func New() *UUID {
 		host, _ := os.Hostname()
 
 		hash := sha256.Sum256([]byte(host))
-		defaultHostCache = hash[:2]
+		defaultHostCache = hash[:lenMachine]
 	}
 
-	noise := make([]byte, 3)
+	noise := make([]byte, lenNoise)
 	_, _ = rand.Read(noise)
 
 	return &UUID{
@@ -44,13 +51,33 @@ func New() *UUID {
 	}
 }
 
-// Parse a uuid
+// N set the namespace
+func (id *UUID) N(ns []byte) *UUID {
+	id.Namespace = ns
+	return id
+}
+
+// M set the machine
+func (id *UUID) M(m []byte) *UUID {
+	id.Machine = m
+	return id
+}
+
+// Parse a uuid binary
 func Parse(data []byte) *UUID {
-	timeBin := append([]byte{0}, data[4:11]...)
+	machineStart := lenNamespace + lenTime
+	machineEnd := machineStart + lenMachine
+	timeBin := append(make([]byte, 8-lenTime), data[lenNamespace:machineStart]...)
 	micro := binary.BigEndian.Uint64(timeBin)
 	t := (*baseTimeCache).Add(time.Duration(micro) * time.Microsecond)
 
-	return &UUID{data[:4], t, data[11:13], data[13:]}
+	return &UUID{data[:lenNamespace], t, data[machineStart:machineEnd], data[machineEnd:]}
+}
+
+// ParseHex a uuid hex string
+func ParseHex(data string) *UUID {
+	b, _ := hex.DecodeString(data)
+	return Parse(b)
 }
 
 func (id *UUID) String() string {
@@ -62,21 +89,24 @@ func (id *UUID) String() string {
 	}, "-")
 }
 
-// Bin of a new uuid. If namespace is nil it will be set to "uuid".
+// Bin of a new uuid.
 func (id *UUID) Bin() []byte {
-	if len(id.Namespace) != 4 {
-		panic("[ysmood/uuid] length of namespace must be 4")
-	}
-	if len(id.Machine) != 2 {
-		panic("[ysmood/uuid] length of machine must be 2")
-	}
-	if len(id.Noise) != 3 {
-		panic("[ysmood/uuid] length of noise must be 2")
-	}
-
 	if baseTimeCache == nil {
 		base, _ := time.Parse("2006", "2020")
 		baseTimeCache = &base
+	}
+
+	if len(id.Namespace) != lenNamespace {
+		panic(fmt.Sprintf("length of namespace must be %d", lenNamespace))
+	}
+	if id.Time.Sub(*baseTimeCache) < 0 {
+		panic(fmt.Sprintf("time must be greater than %v", *baseTimeCache))
+	}
+	if len(id.Machine) != lenMachine {
+		panic(fmt.Sprintf("length of machine must be %d", lenMachine))
+	}
+	if len(id.Noise) != lenNoise {
+		panic(fmt.Sprintf("length of noise must be %d", lenNoise))
 	}
 
 	bin := []byte{}
@@ -86,7 +116,7 @@ func (id *UUID) Bin() []byte {
 	binary.BigEndian.PutUint64(timeBin, uint64(micro))
 
 	bin = append(bin, id.Namespace...)
-	bin = append(bin, timeBin[1:]...)
+	bin = append(bin, timeBin[8-lenTime:]...)
 	bin = append(bin, id.Machine...)
 	bin = append(bin, id.Noise...)
 
