@@ -31,7 +31,7 @@ func TestBytes(t *testing.T) {
 
 	assert.Len(t, id.Bin(), 16)
 
-	expect := `uid-\d\d\d\d_\d\d_\d\dT\d\d:\d\d:\d\d-[0-9a-f]{4}-[0-9a-f]{8}`
+	expect := `...-\d\d\d\d_\d\d_\d\dT\d\d:\d\d:\d\d-..-[0-9a-f]{8}`
 	assert.Regexp(t, expect, id.String())
 
 	assert.True(t, time.Since(prefix) < time.Millisecond)

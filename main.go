@@ -21,8 +21,6 @@ var defaultNamespace = bytes.Repeat([]byte("_"), 3)
 var defaultHostCache []byte
 var baseTimeCache *time.Time
 
-var hs = hex.EncodeToString
-
 // UUID holds the time prefix and random suffix
 type UUID struct {
 	Namespace []byte
@@ -84,8 +82,8 @@ func (id *UUID) String() string {
 	return strings.Join([]string{
 		string(id.Namespace),
 		id.Time.Format("2006_01_02T15:04:05"),
-		hs(id.Machine),
-		hs(id.Noise),
+		string(id.Machine),
+		hex.EncodeToString(id.Noise),
 	}, "-")
 }
 
@@ -125,5 +123,5 @@ func (id *UUID) Bin() []byte {
 
 // Hex of a new uuid in hex format. If namespace is empty it will be set to "uuid".
 func (id *UUID) Hex() string {
-	return hs(id.Bin())
+	return hex.EncodeToString(id.Bin())
 }
