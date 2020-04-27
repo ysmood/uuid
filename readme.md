@@ -15,7 +15,7 @@ Total size is 128 bits, the format looks like this:
 32 bits for cryptographically secure noise (reasonable collision rate)
 ```
 
-A sample anatomy for id `73736F-0009298b229ba5-6E01-011f8cdb` looks like this:
+A sample anatomy for id `73736f-0009298b229ba5-6e01-011f8cdb` looks like this:
 
 ```text
 namespace        time          machine     noise
@@ -25,7 +25,7 @@ namespace        time          machine     noise
 
  service       timestamp        Norway01   random    # meaning
 
-  73736F     0009298b229ba5      6E01     011f8cdb   # hex format
+  73736f     0009298b229ba5      6e01     011f8cdb   # hex format
 ```
 
 The namespace is usually used to specify the application name. Such as use it to filter a specific app's log in elastic search so that you don't need an extra field to store the filter tag.
