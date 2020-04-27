@@ -29,3 +29,19 @@ namespace        time          machine     noise
 ```
 
 The namespace is usually used to specify the application name. Such as use it to filter a specific app's log in elastic search so that you don't need an extra field to store the filter tag.
+
+## Code Example
+
+```go
+package main
+
+import (
+    "fmt"
+
+    "github.com/ysmood/uuid"
+)
+
+func main() {
+    fmt.Println(uuid.New().Bin())
+}
+```
